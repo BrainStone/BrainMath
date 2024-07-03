@@ -13,8 +13,10 @@ void mean_test() {
 	         {0, 1, 0},
 	         {1, 1, 1},
 	         {0, std::numeric_limits<T>::max(), std::numeric_limits<T>::max() / 2},
+	         {1, std::numeric_limits<T>::max(), std::numeric_limits<T>::max() / 2 + 1},
 	         {std::numeric_limits<T>::max(), std::numeric_limits<T>::max(), std::numeric_limits<T>::max()},
 	         {0, std::numeric_limits<T>::min(), std::numeric_limits<T>::min() / 2},
+	         {1, std::numeric_limits<T>::min(), std::numeric_limits<T>::min() / 2},
 	         {std::numeric_limits<T>::min(), std::numeric_limits<T>::min(), std::numeric_limits<T>::min()}}) {
 		EXPECT_EQ(BrainMath::IntMath::mean(a, b), res);
 	}
