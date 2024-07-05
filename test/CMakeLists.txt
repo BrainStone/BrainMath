@@ -38,6 +38,7 @@ gtest_discover_tests(${PROJECT_NAME} XML_OUTPUT_DIR ${CMAKE_BINARY_DIR}/reports)
 
 # Link test executable against gtest & gtest_main
 target_link_libraries(${PROJECT_NAME} PRIVATE gtest gtest_main BrainMath)
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_${CMAKE_CXX_STANDARD})
 
 # Be very strict with compiling
 if (MSVC)
