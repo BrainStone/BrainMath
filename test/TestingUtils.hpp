@@ -4,6 +4,7 @@
 #include <string>
 #include <typeinfo>
 
+// Check for GCC or Clang
 #if defined(__GNUG__) || defined(__clang__)
 #include <cxxabi.h>
 
@@ -21,6 +22,25 @@ std::string type_name() {
 	return tname;
 }
 
+// Check for MSVC
+#elif defined(_MSC_VER)
+#include <dbghelp.h>
+#include <windows.h>
+#pragma comment(lib, "dbghelp.lib")
+
+template <typename T>
+std::string type_name() {
+	std::string tname = typeid(T).name();
+	char demangled_name[1024];
+
+	if (UnDecorateSymbolName(tname.c_str(), demangled_name, sizeof(demangled_name), UNDNAME_COMPLETE)) {
+		tname = demangled_name;
+	}
+
+	return tname;
+}
+
+// Fallback for other compilers
 #else
 
 template <typename T>
