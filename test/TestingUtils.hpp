@@ -28,8 +28,11 @@ std::string type_name() {
 
 // Check for MSVC
 #elif defined(_MSC_VER)
-#include <dbghelp.h>
+// clang-format off
+// Import order matters here!
 #include <windows.h>
+#include <dbghelp.h>
+// clang-format on
 #pragma comment(lib, "dbghelp.lib")
 
 template <typename T>
