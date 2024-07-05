@@ -127,6 +127,11 @@ void random_overflow_parity_test(std::function<std::pair<T, bool>(T, T)> builtin
 #endif
 
 template <BrainMath::Concepts::Integer T>
+T float_sqrt(T val) {
+	return static_cast<T>(std::sqrt(static_cast<long double>(val)));
+}
+
+template <BrainMath::Concepts::Integer T>
 void sqrt_test() {
 	constexpr bool isSigned = std::is_signed_v<T>;
 	constexpr T max = std::numeric_limits<T>::max();
@@ -141,7 +146,7 @@ void sqrt_test() {
 	}
 
 	for (const auto& [val, expected] :
-	     {std::tuple<T, T>{0, 0}, {1, 1}, {3, 1}, {4, 2}, {max, static_cast<T>(sqrtl(max))}}) {
+	     {std::tuple<T, T>{0, 0}, {1, 1}, {3, 1}, {4, 2}, {max, static_cast<T>(float_sqrt(max))}}) {
 		EXPECT_EQ(BrainMath::IntMath::sqrt<T>(val), expected) << type_name<T>() << ": Case " << val;
 	}
 
@@ -156,14 +161,14 @@ void sqrt_test() {
 		// Force values to be positive (std::abs has issues in edge cases)
 		if constexpr (isSigned) val &= max;
 
-		EXPECT_EQ(BrainMath::IntMath::sqrt<T>(val), static_cast<T>(sqrtl(val)))
+		EXPECT_EQ(BrainMath::IntMath::sqrt<T>(val), static_cast<T>(float_sqrt(val)))
 		    << type_name<T>() << ": Uniform case " << val;
 
 		val = gaussian();
 		// Force values to be positive (std::abs has issues in edge cases)
 		if constexpr (isSigned) val &= max;
 
-		EXPECT_EQ(BrainMath::IntMath::sqrt<T>(val), static_cast<T>(sqrtl(val)))
+		EXPECT_EQ(BrainMath::IntMath::sqrt<T>(val), static_cast<T>(float_sqrt(val)))
 		    << type_name<T>() << ": Gaussian case " << val;
 	}
 }
