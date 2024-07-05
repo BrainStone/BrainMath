@@ -109,10 +109,16 @@ Generator<T> uniform_random_number_generator() {
 
 	// NOLINTNEXTLINE: We WANT consistent results!
 	std::mt19937 gen(123);
-	std::uniform_int_distribution dis(min, max);  // min and max are inclusive
+#ifdef _MSC_VER
+	using AtLeast16BitInt = typename std::common_type<T, std::int16_t>::type;
+	// MSC doesn't allow 8 bit ints here
+	std::uniform_int_distribution<AtLeast16BitInt> dis(min, max);
+#else
+	std::uniform_int_distribution<T> dis(min, max);
+#endif
 
 	while (true) {
-		co_yield dis(gen);
+		co_yield static_cast<T>(dis(gen));
 	}
 }
 
