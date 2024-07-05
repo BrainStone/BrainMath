@@ -109,7 +109,7 @@ Generator<T> uniform_random_number_generator() {
 
 	// NOLINTNEXTLINE: We WANT consistent results!
 	std::mt19937 gen(123);
-	std::uniform_int_distribution<T> dis(min, max);  // min and max are inclusive
+	std::uniform_int_distribution dis(min, max);  // min and max are inclusive
 
 	while (true) {
 		co_yield dis(gen);
