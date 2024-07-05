@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <tuple>
@@ -101,6 +102,72 @@ void mul_overflow_test(
 	}
 }
 
+#ifdef BRAINMATH_HAS_BUILTIN_OVERFLOW
+template <BrainMath::Concepts::Integer T>
+void random_overflow_parity_test(std::function<std::pair<T, bool>(T, T)> builtin,
+                                 std::function<std::pair<T, bool>(T, T)> custom) {
+	constexpr std::size_t count = 100'000;
+	T a, b;
+
+	auto uniform = uniform_random_number_generator<T>();
+	auto gaussian = gaussian_random_number_generator<T>();
+
+	for (std::size_t i = 0; i < count; ++i) {
+		a = uniform();
+		b = uniform();
+
+		EXPECT_EQ(builtin(a, b), custom(a, b)) << type_name<T>() << ": Uniform case " << a << ", " << b;
+
+		a = gaussian();
+		b = gaussian();
+
+		EXPECT_EQ(builtin(a, b), custom(a, b)) << type_name<T>() << ": Gaussian case " << a << ", " << b;
+	}
+}
+#endif
+
+template <BrainMath::Concepts::Integer T>
+void sqrt_test() {
+	constexpr bool isSigned = std::is_signed_v<T>;
+	constexpr T max = std::numeric_limits<T>::max();
+
+	if constexpr (isSigned) {
+		errno = 0;
+		std::feclearexcept(FE_ALL_EXCEPT);
+
+		EXPECT_EQ(BrainMath::IntMath::sqrt<T>(-1), -1) << type_name<T>();
+		EXPECT_EQ(errno, EDOM) << type_name<T>();
+		EXPECT_TRUE(std::fetestexcept(FE_INVALID)) << type_name<T>();
+	}
+
+	for (const auto& [val, expected] :
+	     {std::tuple<T, T>{0, 0}, {1, 1}, {3, 1}, {4, 2}, {max, static_cast<T>(sqrtl(max))}}) {
+		EXPECT_EQ(BrainMath::IntMath::sqrt<T>(val), expected) << type_name<T>() << ": Case " << val;
+	}
+
+	constexpr std::size_t count = 100'000;
+	T val;
+
+	auto uniform = uniform_random_number_generator<T>();
+	auto gaussian = gaussian_random_number_generator<T>();
+
+	for (std::size_t i = 0; i < count; ++i) {
+		val = uniform();
+		// Force values to be positive (std::abs has issues in edge cases)
+		if constexpr (isSigned) val &= max;
+
+		EXPECT_EQ(BrainMath::IntMath::sqrt<T>(val), static_cast<T>(sqrtl(val)))
+		    << type_name<T>() << ": Uniform case " << val;
+
+		val = gaussian();
+		// Force values to be positive (std::abs has issues in edge cases)
+		if constexpr (isSigned) val &= max;
+
+		EXPECT_EQ(BrainMath::IntMath::sqrt<T>(val), static_cast<T>(sqrtl(val)))
+		    << type_name<T>() << ": Gaussian case " << val;
+	}
+}
+
 TEST(IntMath, mean) {
 	mean_test<std::int8_t>();
 	mean_test<std::uint8_t>();
@@ -146,27 +213,6 @@ TEST(IntMath, mul_overflow) {
 }
 
 #ifdef BRAINMATH_HAS_BUILTIN_OVERFLOW
-template <BrainMath::Concepts::Integer T>
-void random_overflow_parity_test(std::function<std::pair<T, bool>(T, T)> builtin,
-                                 std::function<std::pair<T, bool>(T, T)> custom) {
-	constexpr std::size_t max = 100'000;
-	T a, b;
-
-	auto uniform = uniform_random_number_generator<T>();
-	auto gaussian = gaussian_random_number_generator<T>();
-
-	for (std::size_t i = 0; i < max; ++i) {
-		a = uniform();
-		b = uniform();
-
-		EXPECT_EQ(builtin(a, b), custom(a, b)) << type_name<T>() << ": Uniform case " << a << ", " << b;
-
-		a = gaussian();
-		b = gaussian();
-
-		EXPECT_EQ(builtin(a, b), custom(a, b)) << type_name<T>() << ": Gaussian case " << a << ", " << b;
-	}
-}
 
 TEST(IntMath, add_overflow_parity) {
 	auto test_parity = []<BrainMath::Concepts::Integer T>(T a, T b) {
@@ -285,3 +331,14 @@ TEST(IntMath, mul_overflow_parity) {
 	                                           BrainMath::IntMath::mul_overflow<std::uint64_t, false>);
 }
 #endif
+
+TEST(IntMath, sqrt) {
+	sqrt_test<std::int8_t>();
+	sqrt_test<std::uint8_t>();
+	sqrt_test<std::int16_t>();
+	sqrt_test<std::uint16_t>();
+	sqrt_test<std::int32_t>();
+	sqrt_test<std::uint32_t>();
+	sqrt_test<std::int64_t>();
+	sqrt_test<std::uint64_t>();
+}
