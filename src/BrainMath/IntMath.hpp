@@ -37,8 +37,17 @@ template <Concepts::Integer T>
 	return (a / 2) + (b / 2) + (a & b & 1);
 }
 
+/**
+ * Adds two integers with overflow detection.
+ *
+ * @tparam T Integer type
+ * @tparam useBuiltin Whether to use compiler builtin overflow detection (if available)
+ * @param a First value
+ * @param b Second value
+ * @return A pair containing the result of the addition and a boolean indicating if overflow occurred.
+ */
 template <Concepts::Integer T, bool useBuiltin = hasBuiltinOverflow>
-constexpr inline std::pair<T, bool> add_overflow(T a, T b) {
+[[nodiscard]] constexpr inline std::pair<T, bool> add_overflow(T a, T b) {
 	T result;
 	bool overflow;
 
@@ -63,8 +72,17 @@ constexpr inline std::pair<T, bool> add_overflow(T a, T b) {
 	return std::make_pair(result, overflow);
 }
 
+/**
+ * Subtracts two integers with overflow detection.
+ *
+ * @tparam T Integer type
+ * @tparam useBuiltin Whether to use compiler builtin overflow detection (if available)
+ * @param a First value
+ * @param b Second value
+ * @return A pair containing the result of the subtraction and a boolean indicating if overflow occurred.
+ */
 template <Concepts::Integer T, bool useBuiltin = hasBuiltinOverflow>
-constexpr inline std::pair<T, bool> sub_overflow(T a, T b) {
+[[nodiscard]] constexpr inline std::pair<T, bool> sub_overflow(T a, T b) {
 	T result;
 	bool overflow;
 
@@ -89,8 +107,17 @@ constexpr inline std::pair<T, bool> sub_overflow(T a, T b) {
 	return std::make_pair(result, overflow);
 }
 
+/**
+ * Multiplies two integers with overflow detection.
+ *
+ * @tparam T Integer type
+ * @tparam useBuiltin Whether to use compiler builtin overflow detection (if available)
+ * @param a First value
+ * @param b Second value
+ * @return A pair containing the result of the multiplication and a boolean indicating if overflow occurred.
+ */
 template <Concepts::Integer T, bool useBuiltin = hasBuiltinOverflow>
-constexpr inline std::pair<T, bool> mul_overflow(T a, T b) {
+[[nodiscard]] constexpr inline std::pair<T, bool> mul_overflow(T a, T b) {
 	T result;
 	bool overflow;
 
