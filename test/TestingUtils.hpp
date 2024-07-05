@@ -35,6 +35,10 @@ std::string type_name() {
 // clang-format on
 #pragma comment(lib, "dbghelp.lib")
 
+// Remove evil preprocessor directives
+#undef min
+#undef max
+
 template <typename T>
 std::string type_name() {
 	std::string tname = typeid(T).name();
