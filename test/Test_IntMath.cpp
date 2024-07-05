@@ -1,5 +1,4 @@
 #include <cstdint>
-#include <functional>
 #include <limits>
 #include <tuple>
 
@@ -147,6 +146,28 @@ TEST(IntMath, mul_overflow) {
 }
 
 #ifdef BRAINMATH_HAS_BUILTIN_OVERFLOW
+template <BrainMath::Concepts::Integer T>
+void random_overflow_parity_test(std::function<std::pair<T, bool>(T, T)> builtin,
+                                 std::function<std::pair<T, bool>(T, T)> custom) {
+	constexpr std::size_t max = 100'000;
+	T a, b;
+
+	auto uniform = uniform_random_number_generator<T>();
+	auto gaussian = gaussian_random_number_generator<T>();
+
+	for (std::size_t i = 0; i < max; ++i) {
+		a = uniform();
+		b = uniform();
+
+		EXPECT_EQ(builtin(a, b), custom(a, b)) << type_name<T>() << ": Uniform case " << a << ", " << b;
+
+		a = gaussian();
+		b = gaussian();
+
+		EXPECT_EQ(builtin(a, b), custom(a, b)) << type_name<T>() << ": Gaussian case " << a << ", " << b;
+	}
+}
+
 TEST(IntMath, add_overflow_parity) {
 	auto test_parity = []<BrainMath::Concepts::Integer T>(T a, T b) {
 		const std::pair<T, bool> builtin = BrainMath::IntMath::add_overflow<T, true>(a, b);
@@ -157,6 +178,7 @@ TEST(IntMath, add_overflow_parity) {
 		return custom;
 	};
 
+	// Critical values
 	add_overflow_test<std::int8_t>(test_parity);
 	add_overflow_test<std::uint8_t>(test_parity);
 	add_overflow_test<std::int16_t>(test_parity);
@@ -165,6 +187,24 @@ TEST(IntMath, add_overflow_parity) {
 	add_overflow_test<std::uint32_t>(test_parity);
 	add_overflow_test<std::int64_t>(test_parity);
 	add_overflow_test<std::uint64_t>(test_parity);
+
+	// Random values
+	random_overflow_parity_test<std::int8_t>(BrainMath::IntMath::add_overflow<std::int8_t, true>,
+	                                         BrainMath::IntMath::add_overflow<std::int8_t, false>);
+	random_overflow_parity_test<std::uint8_t>(BrainMath::IntMath::add_overflow<std::uint8_t, true>,
+	                                          BrainMath::IntMath::add_overflow<std::uint8_t, false>);
+	random_overflow_parity_test<std::int16_t>(BrainMath::IntMath::add_overflow<std::int16_t, true>,
+	                                          BrainMath::IntMath::add_overflow<std::int16_t, false>);
+	random_overflow_parity_test<std::uint16_t>(BrainMath::IntMath::add_overflow<std::uint16_t, true>,
+	                                           BrainMath::IntMath::add_overflow<std::uint16_t, false>);
+	random_overflow_parity_test<std::int32_t>(BrainMath::IntMath::add_overflow<std::int32_t, true>,
+	                                          BrainMath::IntMath::add_overflow<std::int32_t, false>);
+	random_overflow_parity_test<std::uint32_t>(BrainMath::IntMath::add_overflow<std::uint32_t, true>,
+	                                           BrainMath::IntMath::add_overflow<std::uint32_t, false>);
+	random_overflow_parity_test<std::int64_t>(BrainMath::IntMath::add_overflow<std::int64_t, true>,
+	                                          BrainMath::IntMath::add_overflow<std::int64_t, false>);
+	random_overflow_parity_test<std::uint64_t>(BrainMath::IntMath::add_overflow<std::uint64_t, true>,
+	                                           BrainMath::IntMath::add_overflow<std::uint64_t, false>);
 }
 
 TEST(IntMath, sub_overflow_parity) {
@@ -177,6 +217,7 @@ TEST(IntMath, sub_overflow_parity) {
 		return custom;
 	};
 
+	// Critical values
 	sub_overflow_test<std::int8_t>(test_parity);
 	sub_overflow_test<std::uint8_t>(test_parity);
 	sub_overflow_test<std::int16_t>(test_parity);
@@ -185,6 +226,24 @@ TEST(IntMath, sub_overflow_parity) {
 	sub_overflow_test<std::uint32_t>(test_parity);
 	sub_overflow_test<std::int64_t>(test_parity);
 	sub_overflow_test<std::uint64_t>(test_parity);
+
+	// Random values
+	random_overflow_parity_test<std::int8_t>(BrainMath::IntMath::sub_overflow<std::int8_t, true>,
+	                                         BrainMath::IntMath::sub_overflow<std::int8_t, false>);
+	random_overflow_parity_test<std::uint8_t>(BrainMath::IntMath::sub_overflow<std::uint8_t, true>,
+	                                          BrainMath::IntMath::sub_overflow<std::uint8_t, false>);
+	random_overflow_parity_test<std::int16_t>(BrainMath::IntMath::sub_overflow<std::int16_t, true>,
+	                                          BrainMath::IntMath::sub_overflow<std::int16_t, false>);
+	random_overflow_parity_test<std::uint16_t>(BrainMath::IntMath::sub_overflow<std::uint16_t, true>,
+	                                           BrainMath::IntMath::sub_overflow<std::uint16_t, false>);
+	random_overflow_parity_test<std::int32_t>(BrainMath::IntMath::sub_overflow<std::int32_t, true>,
+	                                          BrainMath::IntMath::sub_overflow<std::int32_t, false>);
+	random_overflow_parity_test<std::uint32_t>(BrainMath::IntMath::sub_overflow<std::uint32_t, true>,
+	                                           BrainMath::IntMath::sub_overflow<std::uint32_t, false>);
+	random_overflow_parity_test<std::int64_t>(BrainMath::IntMath::sub_overflow<std::int64_t, true>,
+	                                          BrainMath::IntMath::sub_overflow<std::int64_t, false>);
+	random_overflow_parity_test<std::uint64_t>(BrainMath::IntMath::sub_overflow<std::uint64_t, true>,
+	                                           BrainMath::IntMath::sub_overflow<std::uint64_t, false>);
 }
 
 TEST(IntMath, mul_overflow_parity) {
@@ -197,6 +256,7 @@ TEST(IntMath, mul_overflow_parity) {
 		return custom;
 	};
 
+	// Critical values
 	mul_overflow_test<std::int8_t>(test_parity);
 	mul_overflow_test<std::uint8_t>(test_parity);
 	mul_overflow_test<std::int16_t>(test_parity);
@@ -205,5 +265,23 @@ TEST(IntMath, mul_overflow_parity) {
 	mul_overflow_test<std::uint32_t>(test_parity);
 	mul_overflow_test<std::int64_t>(test_parity);
 	mul_overflow_test<std::uint64_t>(test_parity);
+
+	// Random values
+	random_overflow_parity_test<std::int8_t>(BrainMath::IntMath::mul_overflow<std::int8_t, true>,
+	                                         BrainMath::IntMath::mul_overflow<std::int8_t, false>);
+	random_overflow_parity_test<std::uint8_t>(BrainMath::IntMath::mul_overflow<std::uint8_t, true>,
+	                                          BrainMath::IntMath::mul_overflow<std::uint8_t, false>);
+	random_overflow_parity_test<std::int16_t>(BrainMath::IntMath::mul_overflow<std::int16_t, true>,
+	                                          BrainMath::IntMath::mul_overflow<std::int16_t, false>);
+	random_overflow_parity_test<std::uint16_t>(BrainMath::IntMath::mul_overflow<std::uint16_t, true>,
+	                                           BrainMath::IntMath::mul_overflow<std::uint16_t, false>);
+	random_overflow_parity_test<std::int32_t>(BrainMath::IntMath::mul_overflow<std::int32_t, true>,
+	                                          BrainMath::IntMath::mul_overflow<std::int32_t, false>);
+	random_overflow_parity_test<std::uint32_t>(BrainMath::IntMath::mul_overflow<std::uint32_t, true>,
+	                                           BrainMath::IntMath::mul_overflow<std::uint32_t, false>);
+	random_overflow_parity_test<std::int64_t>(BrainMath::IntMath::mul_overflow<std::int64_t, true>,
+	                                          BrainMath::IntMath::mul_overflow<std::int64_t, false>);
+	random_overflow_parity_test<std::uint64_t>(BrainMath::IntMath::mul_overflow<std::uint64_t, true>,
+	                                           BrainMath::IntMath::mul_overflow<std::uint64_t, false>);
 }
 #endif
