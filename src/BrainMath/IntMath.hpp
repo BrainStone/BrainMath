@@ -1,9 +1,24 @@
 #ifndef BRAINMATH_INTMATH_HPP
 #define BRAINMATH_INTMATH_HPP
 
+#include <utility>
+
 #include "BrainMath/Concepts.hpp"
 
 namespace BrainMath::IntMath {
+
+#ifdef __has_builtin
+#if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow) && \
+    __has_builtin(__builtin_mul_overflow)
+#define BRAINMATH_HAS_BUILTIN_OVERFLOW
+#endif
+#endif
+
+#ifdef BRAINMATH_HAS_BUILTIN_OVERFLOW
+constexpr bool hasBuiltinOverflow = true;
+#else
+constexpr bool hasBuiltinOverflow = false;
+#endif
 
 /**
  * Calculates the mean (<code>(a + b) / 2</code>) of the passed parameters in an overflow safe manner.
@@ -20,6 +35,97 @@ template <Concepts::Integer T>
 	// However, since we are in integer space, if both a and b are odd, we need to add 1 to the average using this
 	// method.
 	return (a / 2) + (b / 2) + (a & b & 1);
+}
+
+template <Concepts::Integer T, bool useBuiltin = hasBuiltinOverflow>
+constexpr inline std::pair<T, bool> add_overflow(T a, T b) {
+	T result;
+	bool overflow;
+
+#ifdef BRAINMATH_HAS_BUILTIN_OVERFLOW
+	if constexpr (useBuiltin) {
+		overflow = __builtin_add_overflow(a, b, &result);
+
+		return std::make_pair(result, overflow);
+	}
+#endif
+
+	// Potentially UB here, but all sane compilers store the truncated result here. Additionally, if an overflow
+	// happened, you shouldn't be reading this value anyway.
+	result = a + b;
+
+	if constexpr (std::is_signed_v<T>) {
+		overflow = (b > 0 && a > std::numeric_limits<T>::max() - b) || (b < 0 && a < std::numeric_limits<T>::min() - b);
+	} else {
+		overflow = a > std::numeric_limits<T>::max() - b;
+	}
+
+	return std::make_pair(result, overflow);
+}
+
+template <Concepts::Integer T, bool useBuiltin = hasBuiltinOverflow>
+constexpr inline std::pair<T, bool> sub_overflow(T a, T b) {
+	T result;
+	bool overflow;
+
+#ifdef BRAINMATH_HAS_BUILTIN_OVERFLOW
+	if constexpr (useBuiltin) {
+		overflow = __builtin_sub_overflow(a, b, &result);
+
+		return std::make_pair(result, overflow);
+	}
+#endif
+
+	// Potentially UB here, but all sane compilers store the truncated result here. Additionally, if an overflow
+	// happened, you shouldn't be reading this value anyway.
+	result = a - b;
+
+	if constexpr (std::is_signed_v<T>) {
+		overflow = (b < 0 && a > std::numeric_limits<T>::max() + b) || (b > 0 && a < std::numeric_limits<T>::min() + b);
+	} else {
+		overflow = a < b;
+	}
+
+	return std::make_pair(result, overflow);
+}
+
+template <Concepts::Integer T, bool useBuiltin = hasBuiltinOverflow>
+constexpr inline std::pair<T, bool> mul_overflow(T a, T b) {
+	T result;
+	bool overflow;
+
+#ifdef BRAINMATH_HAS_BUILTIN_OVERFLOW
+	if constexpr (useBuiltin) {
+		overflow = __builtin_mul_overflow(a, b, &result);
+
+		return std::make_pair(result, overflow);
+	}
+#endif
+
+	// Potentially UB here, but all sane compilers store the truncated result here. Additionally, if an overflow
+	// happened, you shouldn't be reading this value anyway.
+	result = a * b;
+
+	if constexpr (std::is_signed_v<T>) {
+		if (a == 0 || b == 0) {
+			overflow = false;
+		} else if (a == -1 || b == -1) {
+			overflow =
+			    (a == -1 && b == std::numeric_limits<T>::min()) || (b == -1 && a == std::numeric_limits<T>::min());
+		} else if (a < 0 && b < 0) {
+			overflow = a < std::numeric_limits<T>::max() / b;
+		} else if (a < 0) {
+			overflow = a < std::numeric_limits<T>::min() / b;
+		} else if (b < 0) {
+			overflow = b < std::numeric_limits<T>::min() / a;
+		} else {
+			overflow = a > std::numeric_limits<T>::max() / b;
+		}
+	} else {
+		overflow = (a != 0 && b != 0) && (a > std::numeric_limits<T>::max() / b);
+	}
+
+	return std::make_pair(result, overflow);
 }
 
 }  // namespace BrainMath::IntMath
